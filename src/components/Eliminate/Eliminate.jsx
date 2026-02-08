@@ -19,8 +19,24 @@ function Eliminate({ onBack }) {
   const phaserNumberRef = useRef(null);
   const backDialRef = useRef(null);
   const prevLevelRef = useRef(1);
+  const overloadSourceRef = useRef(null);
+  const overloadGainRef = useRef(null);
+  const overloadTimerRef = useRef(null);
 
   const clearOverload = useCallback(() => {
+    if (overloadTimerRef.current) {
+      clearTimeout(overloadTimerRef.current);
+      overloadTimerRef.current = null;
+    }
+    if (overloadSourceRef.current) {
+      try { overloadSourceRef.current.stop(); } catch { /* already stopped */ }
+      overloadSourceRef.current.disconnect();
+      overloadSourceRef.current = null;
+    }
+    if (overloadGainRef.current) {
+      overloadGainRef.current.disconnect();
+      overloadGainRef.current = null;
+    }
     overloadAudio.stop();
   }, [overloadAudio]);
 
@@ -42,25 +58,15 @@ function Eliminate({ onBack }) {
       source.connect(gain);
       source.start(0);
 
-      // Store references so clearOverload can stop it
-      overloadAudio.audioRef.current.gainNode = gain;
-      overloadAudio.audioRef.current._source = source;
-      overloadAudio.audioRef.current._stopOverload = () => {
-        try { source.stop(); } catch { /* already stopped */ }
-        source.disconnect();
-        gain.disconnect();
+      overloadSourceRef.current = source;
+      overloadGainRef.current = gain;
+
+      source.onended = () => {
+        overloadSourceRef.current = null;
+        overloadGainRef.current = null;
       };
     }).catch(() => {});
-  }, [clearOverload, overloadAudio]);
-
-  // Override clearOverload to also stop the manual overload source
-  const clearOverloadFull = useCallback(() => {
-    if (overloadAudio.audioRef.current._stopOverload) {
-      overloadAudio.audioRef.current._stopOverload();
-      overloadAudio.audioRef.current._stopOverload = null;
-    }
-    overloadAudio.stop();
-  }, [overloadAudio]);
+  }, [clearOverload]);
 
   const getLevel = (pos) => {
     if (pos < -500) return 1;
@@ -115,9 +121,9 @@ function Eliminate({ onBack }) {
       if (currentLineRef.current !== newLineRef.current) {
         if (newLineRef.current === 7) {
           effectsAudio.play(`/audio/phaser/${newLineRef.current}.mp3`);
-          setTimeout(() => startOverload(), 1500);
+          overloadTimerRef.current = setTimeout(() => startOverload(), 1500);
         } else {
-          clearOverloadFull();
+          clearOverload();
           effectsAudio.play(`/audio/phaser/${newLineRef.current}.mp3`);
         }
         currentLineRef.current = newLineRef.current;
@@ -128,7 +134,7 @@ function Eliminate({ onBack }) {
 
     window.addEventListener('pointermove', handleMove);
     window.addEventListener('pointerup', handleUp);
-  }, [buttonAudio, effectsAudio, startOverload, clearOverloadFull]);
+  }, [buttonAudio, effectsAudio, startOverload, clearOverload]);
 
   const handleFireDown = useCallback((e) => {
     e.preventDefault();
@@ -144,6 +150,15 @@ function Eliminate({ onBack }) {
       effectsAudio.pause();
     }
   }, [effectsAudio]);
+
+  // Clean up all audio on unmount
+  useEffect(() => {
+    return () => {
+      clearOverload();
+      effectsAudio.stop();
+      buttonAudio.stop();
+    };
+  }, [clearOverload, effectsAudio, buttonAudio]);
 
   return (
     <div className="container eliminate-scene">
