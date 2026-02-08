@@ -30,20 +30,31 @@
 .communicator-std-btn1 { left: 12.5em; top: 3.2em; transform: rotate(270deg); cursor: pointer; }
 .communicator-std-btn2 { left: 20em; top: 3.2em; transform: rotate(270deg); cursor: pointer; }
 
-/* Antenna grill */
+/* Antenna grill — 3D flip */
+.communicator-antenna-wrapper {
+  position: absolute;
+  width: 32em;
+  height: 48em;
+  perspective: 1200px;
+  z-index: 50;
+  pointer-events: none;
+}
+
 .communicator-antenna {
   position: absolute;
   width: 32em;
   height: 48em;
   background: url(/images/communicator_sprites.png) -915px 0px no-repeat;
-  transition: transform .5s ease-in-out;
   transform-origin: center top;
-  transform: scaleY(1);
+  transform: rotateX(0deg) translate(0px, 0px);
+  transition: transform 0.5s ease-in-out;
+  backface-visibility: hidden;
   cursor: pointer;
-  z-index: 50;
+  pointer-events: auto;
 }
 
 .communicator-antenna.open {
-  transform: scaleY(0);
+  transform: rotateX(75deg) translate(0px, -450px);
+  transition: transform 1s ease;
   pointer-events: none;
 }

@@ -1,5 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAudio } from '../../hooks/useAudio';
+import { getAudioContext, getAudioBuffer } from '../../utils/audioContext';
+import { vibrateDialTick, vibratePhaserStart, vibrateStop } from '../../utils/haptics';
 import './Eliminate.css';
 
 function Eliminate({ onBack }) {
@@ -16,55 +18,49 @@ function Eliminate({ onBack }) {
   const finalPosRef = useRef(-570);
   const phaserNumberRef = useRef(null);
   const backDialRef = useRef(null);
-  const overloadRampRef = useRef(null);
+  const prevLevelRef = useRef(1);
 
   const clearOverload = useCallback(() => {
-    if (overloadRampRef.current) {
-      clearInterval(overloadRampRef.current);
-      overloadRampRef.current = null;
-    }
     overloadAudio.stop();
   }, [overloadAudio]);
 
   const startOverload = useCallback(() => {
     clearOverload();
 
-    const audio = overloadAudio.audioRef.current;
-    if (!audio) return;
-    audio.pause();
-    audio.currentTime = 0;
-    audio.loop = false;
-    audio.volume = 0.02;
-    audio.src = '/audio/phaser/phaser_overload_effect.mp3';
+    const src = '/audio/phaser/phaser_overload_effect.mp3';
+    const ctx = getAudioContext();
 
-    // Once we know the duration, ramp volume linearly over it
-    const beginRamp = () => {
-      const duration = audio.duration;
-      if (!duration || !isFinite(duration)) return;
-      const stepInterval = 200;
-      const steps = (duration * 1000) / stepInterval;
-      let step = 0;
-      overloadRampRef.current = setInterval(() => {
-        step++;
-        const vol = Math.min(1, 0.02 + (step / steps) * 0.98);
-        audio.volume = vol;
-        if (step >= steps) {
-          clearInterval(overloadRampRef.current);
-          overloadRampRef.current = null;
-        }
-      }, stepInterval);
-    };
+    getAudioBuffer(src).then((buffer) => {
+      const gain = ctx.createGain();
+      gain.connect(ctx.destination);
+      gain.gain.setValueAtTime(0.02, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + buffer.duration);
 
-    audio.addEventListener('loadedmetadata', function handler() {
-      audio.removeEventListener('loadedmetadata', handler);
-      beginRamp();
-    });
-    // In case metadata is already loaded
-    if (audio.readyState >= 1) beginRamp();
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = false;
+      source.connect(gain);
+      source.start(0);
 
-    audio.play().catch(() => {});
+      // Store references so clearOverload can stop it
+      overloadAudio.audioRef.current.gainNode = gain;
+      overloadAudio.audioRef.current._source = source;
+      overloadAudio.audioRef.current._stopOverload = () => {
+        try { source.stop(); } catch { /* already stopped */ }
+        source.disconnect();
+        gain.disconnect();
+      };
+    }).catch(() => {});
   }, [clearOverload, overloadAudio]);
 
+  // Override clearOverload to also stop the manual overload source
+  const clearOverloadFull = useCallback(() => {
+    if (overloadAudio.audioRef.current._stopOverload) {
+      overloadAudio.audioRef.current._stopOverload();
+      overloadAudio.audioRef.current._stopOverload = null;
+    }
+    overloadAudio.stop();
+  }, [overloadAudio]);
 
   const getLevel = (pos) => {
     if (pos < -500) return 1;
@@ -80,6 +76,7 @@ function Eliminate({ onBack }) {
     e.preventDefault();
     startMouseRef.current = e.clientY;
     isDraggingRef.current = true;
+    prevLevelRef.current = newLineRef.current;
     buttonAudio.play('/audio/phaser/tick.mp3', { loop: true });
 
     if (newLineRef.current !== 7) {
@@ -90,7 +87,11 @@ function Eliminate({ onBack }) {
       if (!isDraggingRef.current) return;
       const diff = Math.floor((startMouseRef.current - ev.clientY) / 2);
       const movePos = dialPosRef.current + diff;
-      newLineRef.current = getLevel(movePos);
+      const level = getLevel(movePos);
+      if (level !== newLineRef.current) {
+        vibrateDialTick();
+      }
+      newLineRef.current = level;
 
       if (movePos >= -570 && movePos <= 0) {
         finalPosRef.current = movePos;
@@ -113,11 +114,10 @@ function Eliminate({ onBack }) {
 
       if (currentLineRef.current !== newLineRef.current) {
         if (newLineRef.current === 7) {
-          // Level 7: play the level sound then start overload
           effectsAudio.play(`/audio/phaser/${newLineRef.current}.mp3`);
           setTimeout(() => startOverload(), 1500);
         } else {
-          clearOverload();
+          clearOverloadFull();
           effectsAudio.play(`/audio/phaser/${newLineRef.current}.mp3`);
         }
         currentLineRef.current = newLineRef.current;
@@ -128,16 +128,18 @@ function Eliminate({ onBack }) {
 
     window.addEventListener('pointermove', handleMove);
     window.addEventListener('pointerup', handleUp);
-  }, [buttonAudio, effectsAudio, startOverload, clearOverload]);
+  }, [buttonAudio, effectsAudio, startOverload, clearOverloadFull]);
 
   const handleFireDown = useCallback((e) => {
     e.preventDefault();
     if (newLineRef.current !== 7) {
+      vibratePhaserStart();
       effectsAudio.play('/audio/phaser/phaser_loop.mp3', { loop: true });
     }
   }, [effectsAudio]);
 
   const handleFireUp = useCallback(() => {
+    vibrateStop();
     if (newLineRef.current !== 7) {
       effectsAudio.pause();
     }

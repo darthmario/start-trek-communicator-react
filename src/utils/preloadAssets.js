@@ -1,6 +1,8 @@
 // Preload all images and key audio files into the browser cache.
 // Returns a promise that resolves when everything is loaded.
 
+import { preDecodeBuffer } from './audioContext';
+
 const IMAGES = [
   '/images/background_mirror.png',
   '/images/beam_hider.png',
@@ -87,4 +89,10 @@ export function preloadAllAssets(onProgress) {
   const audioPromises = AUDIO.map(src => preloadAudioFile(src).then(tick));
 
   return Promise.all([...imagePromises, ...audioPromises]);
+}
+
+// Pre-decode all audio files into the Web Audio buffer cache.
+// Call after user gesture has initialized AudioContext.
+export function preDecodeAllAudio() {
+  return Promise.all(AUDIO.map(src => preDecodeBuffer(src)));
 }

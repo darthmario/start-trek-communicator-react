@@ -1,14 +1,17 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAudio } from '../../hooks/useAudio';
+import { useShake } from '../../hooks/useShake';
+import { useFlick } from '../../hooks/useFlick';
 import { characters } from '../../data/characters';
 import { buttonArray } from '../../data/buttons';
 import SignalSpinner from './SignalSpinner';
 import DepartmentButtons from './DepartmentButtons';
 import ResponseButtons from './ResponseButtons';
 import AntennaGrill from './AntennaGrill';
+import { vibrateGrill, vibrateButton } from '../../utils/haptics';
 import './Communicate.css';
 
-function Communicate({ onBack }) {
+function Communicate({ onBack, motionPermission }) {
   const buttonAudio = useAudio();
   const effectsAudio = useAudio();
 
@@ -17,6 +20,7 @@ function Communicate({ onBack }) {
   const [spinning, setSpinning] = useState(false);
   const [spinnerFrame, setSpinnerFrame] = useState(0);
 
+  const sceneRef = useRef(null);
   const greetedRef = useRef(false);
   const lastButtonRef = useRef(-1);
   const lastDeptRef = useRef('none');
@@ -53,6 +57,7 @@ function Communicate({ onBack }) {
   }, []);
 
   const grillOpenClose = useCallback(() => {
+    vibrateGrill();
     if (transmitting) {
       // Close
       setTransmitting(false);
@@ -72,8 +77,17 @@ function Communicate({ onBack }) {
     }
   }, [transmitting, effectsAudio]);
 
+  // Touch flick on scene — vertical swipe toggles grill (matches original webOS Mojo.Event.flick)
+  useFlick(sceneRef, grillOpenClose);
+
+  // Device shake — physical shake toggles grill (matches original webOS shakestart/shaking/shakeend)
+  useShake(grillOpenClose, {
+    enabled: motionPermission === 'granted' || motionPermission === 'not-needed'
+  });
+
   const handleDeptPress = useCallback((dept) => {
     if (!transmitting) return;
+    vibrateButton();
 
     greetedRef.current = false;
     setActiveDept(dept);
@@ -104,6 +118,7 @@ function Communicate({ onBack }) {
 
   const handleResponsePress = useCallback((type) => {
     if (!transmitting || !departmentRef.current) return;
+    vibrateButton();
 
     const dept = departmentRef.current;
     const charIdx = characterRef.current;
@@ -139,6 +154,40 @@ function Communicate({ onBack }) {
     effectsAudio.play(path);
   }, [transmitting, effectsAudio]);
 
+  // Screen Wake Lock — keep screen on while grill is open
+  useEffect(() => {
+    if (!transmitting) return;
+    if (!('wakeLock' in navigator)) return;
+
+    let wakeLock = null;
+    let released = false;
+
+    const acquire = async () => {
+      try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => { wakeLock = null; });
+      } catch { /* unsupported or denied */ }
+    };
+
+    acquire();
+
+    // Re-acquire on visibility change (wake lock auto-releases when page hidden)
+    const onVisChange = () => {
+      if (document.visibilityState === 'visible' && !released) {
+        acquire();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisChange);
+
+    return () => {
+      released = true;
+      document.removeEventListener('visibilitychange', onVisChange);
+      if (wakeLock) {
+        wakeLock.release().catch(() => {});
+      }
+    };
+  }, [transmitting]);
+
   useEffect(() => {
     return () => {
       if (spinTimerRef.current) clearInterval(spinTimerRef.current);
@@ -146,7 +195,7 @@ function Communicate({ onBack }) {
   }, []);
 
   return (
-    <div className="container communicate-scene">
+    <div className="container communicate-scene" ref={sceneRef}>
       <button className="back-button" onPointerDown={onBack}>{'\u25C0'}</button>
       <div className="trough-gradient-bg"></div>
       <div className="trough-shadow"></div>

@@ -1,8 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
+import { getAudioContext, getAudioBuffer } from '../../utils/audioContext';
+import { preDecodeAllAudio } from '../../utils/preloadAssets';
+import { useInstallPrompt } from '../../hooks/useInstallPrompt';
 import './Title.css';
 
-function Title({ onNavigate, firstLoad, assetsReady, loadProgress }) {
-  const audioRef = useRef(null);
+function Title({ onNavigate, firstLoad, assetsReady, loadProgress, onRequestMotion }) {
+  const sourceRef = useRef(null);
   const beamTextureRef = useRef(null);
   const beamTextureHolderRef = useRef(null);
   const appTitleRef = useRef(null);
@@ -11,6 +14,7 @@ function Title({ onNavigate, firstLoad, assetsReady, loadProgress }) {
 
   const isFirstLoad = firstLoad && firstLoad.current;
   const [waitingForTap, setWaitingForTap] = useState(isFirstLoad);
+  const { isInstallable, promptInstall } = useInstallPrompt();
 
   useEffect(() => {
     if (waitingForTap) return;
@@ -28,8 +32,11 @@ function Title({ onNavigate, firstLoad, assetsReady, loadProgress }) {
       return;
     }
 
-    // First load after tap — play beam-in with audio
+    // First load after tap — play beam-in with Web Audio
     firstLoad.current = false;
+
+    // Pre-decode all audio buffers now that we have a user gesture
+    preDecodeAllAudio();
 
     let titleToggle = true;
     try {
@@ -40,31 +47,40 @@ function Title({ onNavigate, firstLoad, assetsReady, loadProgress }) {
     } catch (e) { /* use default */ }
 
     if (titleToggle) {
-      const audio = new Audio();
-      audioRef.current = audio;
+      let cancelled = false;
+      const src = '/audio/transporter/transporter.mp3';
 
-      let started = false;
-      const startBeamIn = () => {
-        if (started) return;
-        started = true;
-        audio.play().then(() => showFinal()).catch(() => showFinal());
+      const playBeamIn = async () => {
+        try {
+          const ctx = getAudioContext();
+          const buffer = await getAudioBuffer(src);
+          if (cancelled) return;
+
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          source.connect(ctx.destination);
+          source.start(0);
+          sourceRef.current = source;
+          showFinal();
+        } catch {
+          showFinal();
+        }
       };
 
-      audio.addEventListener('canplaythrough', function handler() {
-        audio.removeEventListener('canplaythrough', handler);
-        startBeamIn();
-      });
-      audio.addEventListener('error', function handler() {
-        audio.removeEventListener('error', handler);
-        showFinal();
-      });
-      audio.src = '/audio/transporter/transporter.mp3';
-      audio.load();
-      setTimeout(() => { if (!started) showFinal(); }, 10000);
+      playBeamIn();
+
+      // 10s timeout fallback
+      const timeout = setTimeout(() => {
+        if (!cancelled) showFinal();
+      }, 10000);
 
       return () => {
-        audio.pause();
-        audio.src = '';
+        cancelled = true;
+        clearTimeout(timeout);
+        if (sourceRef.current) {
+          try { sourceRef.current.stop(); } catch { /* already stopped */ }
+          sourceRef.current = null;
+        }
       };
     } else {
       showFinal();
@@ -73,16 +89,25 @@ function Title({ onNavigate, firstLoad, assetsReady, loadProgress }) {
 
   const handleTapToStart = () => {
     if (!assetsReady) return;
+    if (onRequestMotion) onRequestMotion();
+    // Initialize AudioContext on user gesture
+    getAudioContext();
     setWaitingForTap(false);
   };
 
   const handleButtonPress = (scene) => {
-    if (audioRef.current) audioRef.current.pause();
+    if (sourceRef.current) {
+      try { sourceRef.current.stop(); } catch { /* already stopped */ }
+      sourceRef.current = null;
+    }
     onNavigate(scene);
   };
 
   const handleLogoClick = () => {
-    if (audioRef.current) audioRef.current.pause();
+    if (sourceRef.current) {
+      try { sourceRef.current.stop(); } catch { /* already stopped */ }
+      sourceRef.current = null;
+    }
   };
 
   return (
@@ -110,6 +135,11 @@ function Title({ onNavigate, firstLoad, assetsReady, loadProgress }) {
         <div className="menu-column1 menu-row3 menu-settings" onPointerDown={() => handleButtonPress('preferences')}></div>
         <div className="menu-column2 menu-row3 menu-help" onPointerDown={() => handleButtonPress('help')}></div>
       </div>
+      {isInstallable && !waitingForTap && (
+        <div className="install-prompt" onPointerDown={promptInstall}>
+          Install App
+        </div>
+      )}
       {waitingForTap && (
         <div className="tap-to-start" onPointerDown={handleTapToStart}>
           {assetsReady ? (
