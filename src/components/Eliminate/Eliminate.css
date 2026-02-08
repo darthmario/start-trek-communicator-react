@@ -1,0 +1,18 @@
+/* Phaser scene */
+.eliminate-scene {
+  background: #000;
+}
+
+.phaser-gradient-bg { background: url(/images/x_dir_backgrounds.jpg) repeat-x; width: 32em; height: 48em; top: 0; left: 0; position: absolute; }
+.phaser-shadow { position: absolute; width: 12em; height: 28em; border-width: 10em; border-style: solid; border-color: transparent; border-image: url(/images/phaser_shadow_bg.png) 100 stretch; }
+.phaser-metal { position: absolute; left: 2em; top: -.3em; width: 14.7em; height: 18em; border-width: 4.5em 6.8em 4.1em; border-style: solid; border-color: transparent; border-image: url(/images/phaser_metal_bg.png) 45 68 41 fill round; }
+.phaser-bg-shadow { position: absolute; width: 24.1em; height: 6.3em; left: 4.2em; top: 21.9em; background: url(/images/communicator_sprites.png) -623px -698px no-repeat; }
+.phaser-dial-holder { position: absolute; left: 3.2em; top: 28.5em; width: 1.3em; height: 11.3em; }
+.phaser-dial-shadow { position: absolute; width: 1.3em; height: 11.3em; border-width: 3em; border-style: solid; border-color: transparent; border-image: url(/images/phaser_cover_shadow.png) 30 repeat; opacity: 0.61; }
+.phaser-dial { position: absolute; top: 1.8em; left: 1.9em; width: 3.4em; height: 13.7em; background: url(/images/dial.jpg); }
+.phaser-dial-cover { position: absolute; top: 1.8em; left: 1.8em; width: 3.5em; height: 13.7em; background: url(/images/communicator_sprites.png) -1256px -213px no-repeat; }
+.phaser-dial-button { position: absolute; left: 1em; top: 1em; width: 5.1em; height: 15.3em; cursor: grab; touch-action: none; }
+.phaser-dept-buttons { position: absolute; left: 13.2em; top: 34.2em; cursor: pointer; }
+.phaser-numbers-holder { position: absolute; left: 21.5em; top: 28.5em; width: 1.3em; height: 11.3em; }
+.phaser-numbers { position: absolute; top: 1.8em; left: 1.8em; width: 3.7em; height: 13.7em; background: url(/images/solid_sprites.jpg) 0px -530px; }
+.phaser-numbers-cover { position: absolute; top: 1.8em; left: 1.8em; width: 4.2em; height: 13.7em; background: url(/images/communicator_sprites.png) -1253px -62px no-repeat; }

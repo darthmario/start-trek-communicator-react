@@ -1,0 +1,14 @@
+/* Medical scanner scene */
+.medicate-scene {
+  background: #1c1c1c;
+}
+
+.medical-background { position: absolute; width: 32em; height: 48em; background-color: #1c1c1c; }
+.medical-glass-front { position: absolute; top: 2.1em; width: 20.9em; height: 20.1em; left: 5.8em; background: url(/images/communicator_sprites.png) -413px -566px no-repeat; }
+.medical-glass-back { position: absolute; top: 2.1em; width: 20.9em; height: 20.1em; left: 5.8em; background: url(/images/communicator_sprites.png) -191px -340px no-repeat; }
+.medical-spinner-back { position: absolute; top: 2.9em; width: 20.9em; height: 20.1em; left: 5.8em; background: url(/images/background_mirror.png) 0px 0px; }
+.medical-glass-top { position: absolute; top: 2em; width: 21em; height: 4.2em; left: 5.8em; background: url(/images/communicator_sprites.png) -422px -260px no-repeat; }
+.medical-spinner-post { position: absolute; top: 10.7em; width: 21.4em; height: 11.6em; left: 5.55em; background: url(/images/communicator_sprites.png) -701px -123px no-repeat; }
+.medical-spinner-front { position: absolute; top: 2.1em; width: 20.9em; height: 20.1em; left: 5.8em; background: url(/images/forground_mirror.png) 0px 0px; }
+.medical-body { position: absolute; top: 21.2em; width: 27.7em; height: 25.8em; left: 2.2em; background: url(/images/communicator_sprites.png) -422px -1px no-repeat; }
+.medical-std-btn { position: absolute; left: 13.1em; top: 31.4em; cursor: pointer; }

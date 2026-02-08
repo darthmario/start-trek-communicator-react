@@ -1,0 +1,113 @@
+/* Preferences scene */
+.preferences-scene {
+  width: 32em;
+  height: 48em;
+  background: #333;
+  color: #fff;
+  overflow-y: auto;
+  position: relative;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.back-button-prefs {
+  position: fixed;
+}
+
+.prefs-header {
+  background: #222;
+  padding: 1em 1em 1em 4.5em;
+  border-bottom: 1px solid #555;
+}
+
+.prefs-title {
+  font-size: 1.6em;
+  font-weight: bold;
+}
+
+.prefs-content {
+  padding: 0.5em;
+}
+
+.prefs-group {
+  margin-bottom: 1.5em;
+}
+
+.prefs-group-title {
+  font-size: 1.4em;
+  font-weight: bold;
+  color: #aaa;
+  padding: 0.8em 0.5em 0.4em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prefs-note {
+  font-size: 1.4em;
+  color: #c77;
+  padding: 0.5em 1em;
+}
+
+.prefs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1em;
+  background: #444;
+  border-bottom: 1px solid #555;
+}
+
+.prefs-char-row {
+  padding-left: 2em;
+  background: #3a3a3a;
+}
+
+.prefs-label {
+  font-size: 1.5em;
+}
+
+.toggle-btn {
+  border: none;
+  padding: 0.6em 1.4em;
+  border-radius: 2em;
+  font-size: 1.2em;
+  font-weight: bold;
+  cursor: pointer;
+  min-width: 5em;
+  transition: background-color 0.2s;
+}
+
+.toggle-btn.on {
+  background: #4a9;
+  color: #fff;
+}
+
+.toggle-btn.off {
+  background: #666;
+  color: #999;
+}
+
+.prefs-dept-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1em;
+  background: #555;
+  cursor: pointer;
+  font-size: 1.5em;
+  font-weight: bold;
+  border-bottom: 1px solid #666;
+  user-select: none;
+}
+
+.prefs-chevron {
+  font-size: 0.8em;
+}
+
+.prefs-drawer {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 50em; }
+}

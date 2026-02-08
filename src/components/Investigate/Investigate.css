@@ -1,0 +1,26 @@
+/* Tricorder scene */
+.investigate-scene {
+  background: #000;
+}
+
+.tricorder-gradient-bg { background: url(/images/metal_bg.png); width: 32em; height: 48em; top: 0; left: 0; position: absolute; }
+.tricorder-metal-texture { background: url(/images/metal_texture.png); width: 32em; height: 48em; position: absolute; }
+.tricorder-metal-shadow { width: 25.8em; height: 41.8em; position: absolute; border-width: 3.1em; border-style: solid; border-color: transparent; border-image: url(/images/tricorder_full_shadow.png) 31 repeat; opacity: .6; }
+.tricorder-screen-holder { position: absolute; left: 5.3em; top: 1.9em; width: 21.6em; height: 22.6em; background: url(/images/solid_sprites.jpg) -37px 0px; }
+.tricorder-screen-changer { opacity: 0; transition: opacity 1s linear; }
+.tricorder-screen-cover { position: absolute; left: 5.3em; top: 1.9em; width: 21.6em; height: 22.6em; background: url(/images/communicator_sprites.png) -632px -471px no-repeat; }
+.tricorder-button-holder { position: absolute; left: 2.5em; top: 27em; }
+.tricorder-std-btn1 { cursor: pointer; }
+.tricorder-std-btn2 { position: absolute; top: 6.9em; cursor: pointer; }
+.tricorder-std-btn3 { position: absolute; top: 13.8em; cursor: pointer; }
+.tricorder-dept-buttons { position: absolute; left: 9.6em; top: 26.5em; }
+.tricorder-button1 { position: relative; display: inline-block; }
+.tricorder-button2 { position: absolute; top: 6.9em; }
+.tricorder-button3 { position: absolute; top: 13.9em; }
+.tricorder-dept-buttons .straight-button { cursor: pointer; }
+.tricorder-speaker-holder { position: absolute; top: 30em; left: 14.7em; }
+.tricorder-speaker-shadow { position: absolute; width: 7.2em; height: 5em; border-width: 4em 4.4em; border-style: solid; border-color: transparent; border-image: url(/images/speaker-shadow.png) 40 44 repeat; opacity: .2; }
+.tricorder-grill { position: absolute; top: 1.6em; left: 2.2em; width: 11.6em; height: 9.5em; background: url(/images/radio_screen.png); }
+.tricorder-speaker-darken { position: absolute; top: 1.6em; left: 2.2em; width: 11.6em; height: 9.5em; background-color: #000; opacity: .1; }
+.tricorder-inner-shadow { position: absolute; top: 1.6em; left: 2.2em; width: 9.4em; height: 7.1em; border-width: 1.2em 1.1em; border-style: solid; border-color: transparent; border-image: url(/images/speaker-inner-shadow.png) 12 11 repeat; }
+.tricorder-frame { position: absolute; top: 1.6em; left: 2.2em; width: 10.3em; height: 6.9em; border-width: 1.3em 0.7em; border-style: solid; border-color: transparent; border-image: url(/images/speaker_rim.png) 13 7 repeat; }
