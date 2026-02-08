@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import './Title.css';
 
-function Title({ onNavigate, firstLoad }) {
+function Title({ onNavigate, firstLoad, assetsReady, loadProgress }) {
   const audioRef = useRef(null);
   const beamTextureRef = useRef(null);
   const beamTextureHolderRef = useRef(null);
@@ -72,6 +72,7 @@ function Title({ onNavigate, firstLoad }) {
   }, [waitingForTap]);
 
   const handleTapToStart = () => {
+    if (!assetsReady) return;
     setWaitingForTap(false);
   };
 
@@ -111,7 +112,17 @@ function Title({ onNavigate, firstLoad }) {
       </div>
       {waitingForTap && (
         <div className="tap-to-start" onPointerDown={handleTapToStart}>
-          <div className="tap-to-start-text">Tap to Begin</div>
+          {assetsReady ? (
+            <div className="tap-to-start-text">Tap to Begin</div>
+          ) : (
+            <div className="loading-container">
+              <div className="loading-text">Loading...</div>
+              <div className="loading-bar-track">
+                <div className="loading-bar-fill" style={{ width: `${loadProgress}%` }}></div>
+              </div>
+              <div className="loading-percent">{loadProgress}%</div>
+            </div>
+          )}
         </div>
       )}
     </div>
