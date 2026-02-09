@@ -1,5 +1,5 @@
-import { useRef, useCallback, useEffect } from 'react';
-import { getAudioContext, getAudioBuffer, ensureResumed } from '../utils/audioContext';
+import { useRef, useCallback, useEffect, useMemo } from 'react';
+import { getAudioContext, getAudioBuffer, getCachedBuffer, ensureResumed } from '../utils/audioContext';
 
 export function useAudio() {
   const sourceRef = useRef(null);
@@ -36,8 +36,6 @@ export function useAudio() {
   const play = useCallback((src, { loop = false } = {}) => {
     stopSource();
 
-    // Generation counter — if play() is called again before this resolves,
-    // the stale .then() will see a mismatched id and bail out
     const id = ++playIdRef.current;
 
     const ctx = getAudioContext();
@@ -45,17 +43,29 @@ export function useAudio() {
     gain.connect(ctx.destination);
     gainRef.current = gain;
 
-    // Wait for context to be running AND buffer to be decoded
+    const startSource = (buffer) => {
+      bufferRef.current = buffer;
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.loop = loop;
+      source.connect(gain);
+      source.start(0);
+      sourceRef.current = source;
+    };
+
+    // Synchronous fast path: if context is running and buffer is cached,
+    // start playback immediately (critical for Android user-gesture timing)
+    const cached = getCachedBuffer(src);
+    if (cached && ctx.state === 'running') {
+      startSource(cached);
+      return;
+    }
+
+    // Async fallback: wait for context resume and/or buffer decode
     Promise.all([ensureResumed(), getAudioBuffer(src)])
       .then(([, buffer]) => {
         if (playIdRef.current !== id) return; // stale — a newer play() was called
-        bufferRef.current = buffer;
-        const source = ctx.createBufferSource();
-        source.buffer = buffer;
-        source.loop = loop;
-        source.connect(gain);
-        source.start(0);
-        sourceRef.current = source;
+        startSource(buffer);
       })
       .catch(() => {});
   }, [stopSource]);
@@ -84,5 +94,6 @@ export function useAudio() {
     };
   }, [stopSource]);
 
-  return { play, pause, stop, audioRef };
+  // Return a stable object so consumers can safely use it in useEffect/useCallback deps
+  return useMemo(() => ({ play, pause, stop, audioRef }), [play, pause, stop, audioRef]);
 }

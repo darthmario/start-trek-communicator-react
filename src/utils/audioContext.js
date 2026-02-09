@@ -58,6 +58,11 @@ export async function getAudioBuffer(src) {
   return promise;
 }
 
+// Synchronous cache lookup — returns the decoded buffer or null
+export function getCachedBuffer(src) {
+  return bufferCache.get(src) || null;
+}
+
 export async function preDecodeBuffer(src) {
   try {
     await getAudioBuffer(src);
