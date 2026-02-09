@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { getAudioContext, getAudioBuffer } from '../../utils/audioContext';
+import { getAudioContext, getAudioBuffer, ensureResumed } from '../../utils/audioContext';
 import { preDecodeAllAudio } from '../../utils/preloadAssets';
 import { useInstallPrompt } from '../../hooks/useInstallPrompt';
 import './Title.css';
@@ -52,8 +52,7 @@ function Title({ onNavigate, firstLoad, assetsReady, loadProgress, onRequestMoti
 
       const playBeamIn = async () => {
         try {
-          const ctx = getAudioContext();
-          const buffer = await getAudioBuffer(src);
+          const [ctx, buffer] = await Promise.all([ensureResumed(), getAudioBuffer(src)]);
           if (cancelled) return;
 
           const source = ctx.createBufferSource();

@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useAudio } from '../../hooks/useAudio';
-import { getAudioContext, getAudioBuffer } from '../../utils/audioContext';
+import { getAudioContext, getAudioBuffer, ensureResumed } from '../../utils/audioContext';
 import { vibrateDialTick, vibratePhaserStart, vibrateStop } from '../../utils/haptics';
 import './Eliminate.css';
 
@@ -44,9 +44,8 @@ function Eliminate({ onBack }) {
     clearOverload();
 
     const src = '/audio/phaser/phaser_overload_effect.mp3';
-    const ctx = getAudioContext();
 
-    getAudioBuffer(src).then((buffer) => {
+    Promise.all([ensureResumed(), getAudioBuffer(src)]).then(([ctx, buffer]) => {
       const gain = ctx.createGain();
       gain.connect(ctx.destination);
       gain.gain.setValueAtTime(0.02, ctx.currentTime);

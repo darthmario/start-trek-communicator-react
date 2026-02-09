@@ -1,6 +1,7 @@
 // Shared Web Audio API singleton and buffer cache
 
 let ctx = null;
+let resumePromise = null;
 const bufferCache = new Map();
 const pendingFetches = new Map();
 
@@ -12,6 +13,25 @@ export function getAudioContext() {
     ctx.resume().catch(() => {});
   }
   return ctx;
+}
+
+// Ensure the AudioContext is running before playback.
+// On Android, Chrome suspends the context after silence gaps.
+export function ensureResumed() {
+  const audioCtx = getAudioContext();
+  if (audioCtx.state === 'running') {
+    return Promise.resolve(audioCtx);
+  }
+  if (!resumePromise) {
+    resumePromise = audioCtx.resume().then(() => {
+      resumePromise = null;
+      return audioCtx;
+    }).catch(() => {
+      resumePromise = null;
+      return audioCtx;
+    });
+  }
+  return resumePromise;
 }
 
 export async function getAudioBuffer(src) {
