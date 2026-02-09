@@ -20,7 +20,7 @@
 .trough-shadow { position: absolute; left: 0.4em; top: 0.8em; border-width: 0 3.7em; width: 23.8em; height: 47.2em; opacity: 0.69; border-style: solid; border-color: transparent; border-image: url(/images/trough_shadow.png) 0 37 stretch; }
 
 /* TITLE SCREEN ITEMS */
-.starfleet-logo { position: absolute; width: 23.2em; height: 33.9em; left: 4.7em; background: url(/images/communicator_sprites.png) top -190px no-repeat; }
+.starfleet-logo { position: absolute; width: 23.2em; height: 33.9em; left: 4.7em; background: url(/images/communicator_sprites.png) -190px 0 no-repeat; }
 .logo-holder { position: absolute; top: 1em; left: 1.8em; cursor: pointer; }
 .logo-beam-pattern { left: 1.2em; width: 26em; height: 19.1em; position: absolute; background: url(/images/beam_ray.png); transition: background-position 5s linear; }
 .logo-beam-pattern-holder { opacity: 0; transition: opacity 2s linear; }
